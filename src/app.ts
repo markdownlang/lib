@@ -2,9 +2,13 @@ import fastify from "fastify";
 import fastifyView from "@fastify/view";
 import { Edge } from "edge.js";
 import { join } from "node:path";
-import fetchAllMdlibsFromGitHub from "./fetchAllMdlibsFromGitHub.ts";
+import dumbCacheGitHubResults from "./dumbCacheGitHubResults.ts";
+import generateTempDirAndCacheFile from "./generateTempDirAndCacheFile.ts";
 
-const libs = await fetchAllMdlibsFromGitHub();
+const service = {
+	"name": "lib.lang.md",
+	"description": "The Markdownlang Public Library",
+}
 const server = fastify({ logger: true });
 
 // we're using Edge because it's pretty no-nonsense
@@ -19,16 +23,20 @@ server.register(fastifyView, {
 	},
 });
 
+const { dir, cacheFile } = await generateTempDirAndCacheFile()
+const timeout = Number(process.env['CACHE_TIMEOUT']) || 1000*60*10; // default to 10 minute timeout for cache
+
+
 // our index renderer. if you want to make changes to the view, you'll likely need to edit
 // edge templates in /templates, /components, and /partials.
 server.get("/", async (request, reply) => {
 	request.log.info("Received request for /");
 	const data = {
 		metadata: {
-			title: "Markdownlang Libraries",
-			description: "The Markdownlang Library Registry",
+			title: service.name,
+			description: service.description,
 		},
-		libs,
+		libs: await dumbCacheGitHubResults(timeout, dir, cacheFile),
 	};
 	reply.view("../../edge/templates/index.edge", data);
 	return reply;
@@ -43,7 +51,8 @@ server.get("/", async (request, reply) => {
 // if we just serve the data direcyly with Fastify.
 //
 // optimization here is welcome.
-server.get("/:owner/:name", (request, reply) => {
+server.get("/:owner/:name", async (request, reply) => {
+	const libs = await dumbCacheGitHubResults(timeout, dir, cacheFile);;
 	// set up our types for the expected parameters
 	const { owner, name } = request.params as { owner: string; name: string };
 	request.log.info(`Received request for owner/name: ${owner}/${name}`);
@@ -51,17 +60,16 @@ server.get("/:owner/:name", (request, reply) => {
 	reply.header("Content-Type", "text/markdown");
 	if (!owner || !name) return reply.status(404).send(errFuncInMarkdown);
 	for (const lib in libs) {
-		// @ts-expect-error
 		if (libs[lib].owner === owner && libs[lib].name === name) {
 			reply.code(200);
-			// @ts-expect-error
 			return reply.send(libs[lib].readme.content);
 		}
 	}
 	return reply.status(404).send(errFuncInMarkdown);
 });
 
-server.get("/pin/:pin", (request, reply) => {
+server.get("/pin/:pin", async (request, reply) => {
+	const libs = await dumbCacheGitHubResults(timeout, dir, cacheFile);
 	const { pin } = request.params as { pin: string};
 	request.log.info(`Received request for pin: ${pin}`);
 	reply.header("Content-Type", "text/markdown");
@@ -74,10 +82,8 @@ server.get("/pin/:pin", (request, reply) => {
 	}
 	
 	for (const lib in libs) {
-		// @ts-expect-error
 		if (libs[lib].pin === pin) {
 			reply.code(200);
-			// @ts-expect-error
 			return reply.send(libs[lib].readme.content);
 		}
 	}
@@ -85,7 +91,8 @@ server.get("/pin/:pin", (request, reply) => {
 	return reply.status(404).send(errFuncInMarkdown);
 });
 
-server.get("/sha/:sha", (request, reply) => {
+server.get("/sha/:sha", async (request, reply) => {
+	const libs = await dumbCacheGitHubResults(timeout, dir, cacheFile);
 	const { sha } = request.params as { sha: string};
 	request.log.info(`Received request for sha: ${sha}`);
 	reply.header("Content-Type", "text/markdown");
@@ -98,12 +105,9 @@ server.get("/sha/:sha", (request, reply) => {
 	}
 	
 	for (const lib in libs) {
-		// @ts-expect-error
 		console.log(libs[lib].readme.sha, sha)
-		// @ts-expect-error
 		if (libs[lib].readme.sha === sha) {
 			reply.code(200);
-			// @ts-expect-error
 			return reply.send(libs[lib].readme.content);
 		}
 	}

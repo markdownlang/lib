@@ -6,6 +6,9 @@ const octokit = new Octokit({
 	auth: process.env['GITHUB_TOKEN'],
 });
 
+// this is the version of the API we're building, not the version of Octokit. We can use this to manage breaking changes in our API and communicate to users when they need to update their client to be compatible with our server.
+const apiVersion = '0.1.0'; 
+
 
 // this is an Octokit request that we expect to call multiple times until the pagination
 // has been exhausted. it will return all repositories tagged with the "mdlib" topic, 
@@ -80,6 +83,9 @@ async function processRepositoryData(libs: Array<any>) {
 			archived: libs[lib].archived,
 			disabled: libs[lib].disabled,
 			topics: libs[lib].topics,
+			meta: {
+				apiVersion,
+			}
 		};
 
 		// @ts-expect-error
