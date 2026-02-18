@@ -1,7 +1,7 @@
 {
 	"name": "lib",
 	"version": "0.0.1",
-	"description": "lib.lang.md: The Markdownlang Library Registry",
+	"description": "lib.lang.md: The Markdownlang Public Library",
 	"main": "./dist/app.js",
 	"scripts": {
 		"build": "tsc -p tsconfig.json",
