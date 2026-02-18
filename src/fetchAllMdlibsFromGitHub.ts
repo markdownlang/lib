@@ -57,7 +57,7 @@ async function processRepositoryData(libs: Array<any>) {
 	const data = {};
 
 	for (const lib in libs) {
-		if (libs[lib].fork === true) continue;
+		if (libs[lib].fork === true) continue; // skip forks
 
 		const usefulData = {
 			name: libs[lib].name,
