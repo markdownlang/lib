@@ -21,8 +21,11 @@ Hey if you have suggestions, update this section.
 
 We're currently using the following stack:
 
+- [Node.js](https://nodejs.org/) for the runtime
+- [TypeScript](https://www.typescriptlang.org/) for "type safety"
 - [Fastify](https://www.fastify.io/) for the server
 - [Edge.js](https://edgejs.dev/) for templating
+- [Octokit](https://github.com/octokit/rest.js) for GitHub API interactions
 
 ### Contributing
 
@@ -37,4 +40,5 @@ Features we're looking for:
 - A way to filter by tags (e.g. "parser", "formatter", etc.)
 - Leverage published git tags as a versioning system
 - GitHub Enterprise support (so you can run this internally, Markdownlang Innersource is not far from reality)
+- Fix @ts-expect-error comments
 
