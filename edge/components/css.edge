@@ -1,0 +1,50 @@
+@pushOnceTo('css')
+	<style>
+		.liblist {
+			display:flex;
+			flex-direction: row;
+			flex-wrap: row;
+			flex-basis: 100%;
+			max-width: 700px;
+			margin: 0 auto
+		}
+
+		.liblist section {
+			display: flex;
+			flex-direction: column;
+			flex-wrap: row;
+			flex-basis: 100%;
+		}
+
+		.lib-header {
+			display: flex;
+			flex-basis: 100%;
+		}
+
+		.lib-header h3 {
+			display: flex;
+			order: 1;
+			flex-basis: 50%;
+		}
+
+		.lib-header aside {
+			display: flex;
+			order: 2;
+			flex-basis: 50%;
+			justify-content: flex-end;
+		}
+		
+		.lib-header aside p {
+			padding-right: 1rem;
+		}
+
+		.lib-footer {
+			display: flex;
+		}
+
+		.lib-footer p {
+			display:flex;
+			flex-basis: 50%;
+		}
+	</style>	
+@end

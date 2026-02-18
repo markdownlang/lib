@@ -1,9 +1,15 @@
-import { Octokit, App } from "octokit";
+import { Octokit } from "octokit";
 
+// set up Octokit. You _will_ need to provide a GITHUB_TOKEN in your 
+// environment variables for this to work.
 const octokit = new Octokit({
-	auth: process.env.GITHUB_TOKEN,
+	auth: process.env['GITHUB_TOKEN'],
 });
 
+
+// this is an Octokit request that we expect to call multiple times until the pagination
+// has been exhausted. it will return all repositories tagged with the "mdlib" topic, 
+// which is how we identify libraries to be included in the registry.
 async function getReposThatMatchTemplates(): Promise<any> {
 	const response = await octokit.rest.search.repos({
 		q: "topic:mdlib",
@@ -13,6 +19,10 @@ async function getReposThatMatchTemplates(): Promise<any> {
 	return response;
 }
 
+// this function is an Octokit request that we use to fetch specific repositories' README files,
+// which we serve directly. Currently, we're doing this hot and it's not cached.
+// if you want @bnb to call you a really cool person in README.md, you can add caching.
+// TODO: add caching of the data this function fetches.
 async function getREADMEFromMatchingTemplate(repo: any): Promise<any> {
 	const query = await octokit.rest.repos.getContent({
 		owner: repo.owner.login,
@@ -20,6 +30,8 @@ async function getREADMEFromMatchingTemplate(repo: any): Promise<any> {
 		path: "README.md",
 	});
 
+
+	// forgive me for my @ts-expect-error crimes
 	const readme = {
 		// @ts-expect-error
 		sha: query.data.sha,
@@ -38,18 +50,20 @@ async function getREADMEFromMatchingTemplate(repo: any): Promise<any> {
 	return readme;
 }
 
+// this function wraps the execution of getReposThatMatchTemplates() and getREADMEFromMatchingTemplate() 
+// and processes the data into a format we can serve to the client. GitHub's names are ugly and @bnb wants
+// a prettier API.
 async function processRepositoryData(libs: Array<any>) {
 	const data = {};
 
 	for (const lib in libs) {
 		if (libs[lib].fork === true) continue;
-		console.log(libs[lib])
 
 		const usefulData = {
 			name: libs[lib].name,
 			owner: libs[lib].owner.login,
 			id: libs[lib].full_name,
-			pin: libs[lib].id, // use the id as a way to pin to the repo so they can't hot swap the repo from under you
+			pin: Number(libs[lib].id).toString(), // use the id as a way to pin to the repo so they can't hot swap the repo from under you
 			description: libs[lib].description,
 			url: libs[lib].html_url,
 			stargazers: libs[lib].stargazers_count,

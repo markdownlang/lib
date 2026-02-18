@@ -1,0 +1,129 @@
+import fastify from "fastify";
+import fastifyView from "@fastify/view";
+import { Edge } from "edge.js";
+import { join } from "node:path";
+import fetchAllMdlibsFromGitHub from "./fetchAllMdlibsFromGitHub.ts";
+
+const libs = await fetchAllMdlibsFromGitHub();
+const server = fastify({ logger: true });
+
+// we're using Edge because it's pretty no-nonsense
+// you can find more details at https://edgejs.dev
+const edge = new Edge();
+edge.mount(join(import.meta.dirname, "templates"));
+
+server.register(fastifyView, {
+	engine: {
+		// @ts-expect-error
+		edge: edge,
+	},
+});
+
+// our index renderer. if you want to make changes to the view, you'll likely need to edit
+// edge templates in /templates, /components, and /partials.
+server.get("/", async (request, reply) => {
+	request.log.info("Received request for /");
+	const data = {
+		metadata: {
+			title: "Markdownlang Libraries",
+			description: "The Markdownlang Library Registry",
+		},
+		libs,
+	};
+	reply.view("../../edge/templates/index.edge", data);
+	return reply;
+});
+
+
+// this is the function that serves libraries to the client,
+// and will probably be the hottest endpoint for us.
+// 
+// one additional note here: we've specifically decided _not_ to render
+// this page with Edge because we'll _very likely_ get much faster output
+// if we just serve the data direcyly with Fastify.
+//
+// optimization here is welcome.
+server.get("/:owner/:name", (request, reply) => {
+	// set up our types for the expected parameters
+	const { owner, name } = request.params as { owner: string; name: string };
+	request.log.info(`Received request for owner/name: ${owner}/${name}`);
+	const errFuncInMarkdown = "~~owner/name not found~~"; // leverage Strikethrough() for non-existent packages, lol
+	reply.header("Content-Type", "text/markdown");
+	if (!owner || !name) return reply.status(404).send(errFuncInMarkdown);
+	for (const lib in libs) {
+		// @ts-expect-error
+		if (libs[lib].owner === owner && libs[lib].name === name) {
+			reply.code(200);
+			// @ts-expect-error
+			return reply.send(libs[lib].readme.content);
+		}
+	}
+	return reply.status(404).send(errFuncInMarkdown);
+});
+
+server.get("/pin/:pin", (request, reply) => {
+	const { pin } = request.params as { pin: string};
+	request.log.info(`Received request for pin: ${pin}`);
+	reply.header("Content-Type", "text/markdown");
+	const errFuncInMarkdown = "~~pin not found~~"; // leverage Strikethrough() for non-existent packages, lol
+	
+	// check if there's actually a pin provided in the request
+	if (!pin) {
+		request.log.error(`No pin provided in request for /pin/:pin: ${pin}`);
+		return reply.status(404).send(errFuncInMarkdown);
+	}
+	
+	for (const lib in libs) {
+		// @ts-expect-error
+		if (libs[lib].pin === pin) {
+			reply.code(200);
+			// @ts-expect-error
+			return reply.send(libs[lib].readme.content);
+		}
+	}
+	request.log.error(`The pin doesn't exist in our data: ${pin}`);
+	return reply.status(404).send(errFuncInMarkdown);
+});
+
+server.get("/sha/:sha", (request, reply) => {
+	const { sha } = request.params as { sha: string};
+	request.log.info(`Received request for sha: ${sha}`);
+	reply.header("Content-Type", "text/markdown");
+	const errFuncInMarkdown = "~~sha not found~~"; // leverage Strikethrough() for non-existent packages, lol
+	
+	// check if there's actually a sha provided in the request
+	if (!sha) {
+		request.log.error(`No sha provided in request for /sha/:sha: ${sha}`);
+		return reply.status(404).send(errFuncInMarkdown);
+	}
+	
+	for (const lib in libs) {
+		// @ts-expect-error
+		console.log(libs[lib].readme.sha, sha)
+		// @ts-expect-error
+		if (libs[lib].readme.sha === sha) {
+			reply.code(200);
+			// @ts-expect-error
+			return reply.send(libs[lib].readme.content);
+		}
+	}
+	request.log.error(`The sha doesn't exist in our data: ${sha}`);
+	return reply.status(404).send(errFuncInMarkdown);
+});
+
+
+// basic healthcheck because it's what the cool kids do
+server.get("/health", async (request) => {
+	request.log.info("Received request for /health");
+	return { status: "ok" };
+});
+
+// run the server!
+server.listen({ port: 8080 }, (err, address) => {
+	if (err) {
+		console.error(err);
+		process.exit(1);
+	}
+
+	server.log.info(`Server running at ${address}`);
+});

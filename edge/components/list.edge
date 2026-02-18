@@ -1,0 +1,31 @@
+<section class="liblist">
+	@each(lib in libs)
+		<section id="lib-pin-{{ lib.pin }}" class="lib">
+			<header class="lib-header">
+				<h3><a href="./{{ lib.id}}">{{ lib.id }}</a></h3>
+				<aside>
+					<p><a href="{{ lib.url }}">GitHub</a></p>
+					<p>Stars: {{ lib.stargazers }}</p>
+					<p>Issues: {{ lib.issues }}</p>
+					<p>License: {{ lib.license }}</p>
+				</aside>
+			</header>
+			<section class="lib-description">
+				<h4>Description</h4>
+				<p>{{ lib.description }}</p>
+			</section>
+			<section class="lib-code">
+				<h4>Code</h4>
+				<pre class="readme">{{ lib.readme.content }}</pre>
+				<aside>
+					<h5>Basic Usage</h5>
+					<pre>[](https://lib.lang.md/{{lib.id}})</pre>
+				</aside>
+			</section>
+			<footer class="lib-footer">
+				<p>pin: {{ lib.pin}}</p>
+				<p>sha: {{ lib.readme.sha}}</p>
+			</footer>
+		</section>
+	@end
+</section>
