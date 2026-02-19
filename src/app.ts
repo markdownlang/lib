@@ -4,6 +4,7 @@ import { Edge } from "edge.js";
 import { join } from "node:path";
 import dumbCacheGitHubResults from "./dumbCacheGitHubResults.ts";
 import generateTempDirAndCacheFile from "./generateTempDirAndCacheFile.ts";
+import getLibByOwnerAndName from "./getLibByOwnerAndName.ts";
 
 const service = {
 	"name": "lib.lang.md",
@@ -25,13 +26,17 @@ server.register(fastifyView, {
 
 const { dir, cacheFile } = await generateTempDirAndCacheFile()
 const timeout = Number(process.env['CACHE_TIMEOUT']) || 1000*60*10; // default to 10 minute timeout for cache
-
+const site = {
+	root: process.env['SITE_ROOT'] || 'http://localhost:8080',
+	protocol: process.env['SITE_PROTOCOL'] || 'http',
+}
 
 // our index renderer. if you want to make changes to the view, you'll likely need to edit
 // edge templates in /templates, /components, and /partials.
 server.get("/", async (request, reply) => {
 	request.log.info("Received request for /");
 	const data = {
+		site: site,
 		metadata: {
 			title: service.name,
 			description: service.description,
@@ -39,6 +44,27 @@ server.get("/", async (request, reply) => {
 		libs: await dumbCacheGitHubResults(timeout, dir, cacheFile),
 	};
 	reply.view("../../edge/templates/index.edge", data);
+	return reply;
+});
+
+// single package view
+server.get("/view/:owner/:name", async (request, reply) => {
+	const { owner, name } = request.params as { owner: string; name: string };
+	request.log.info(`Received request for /view/${owner}/${name}`);
+
+	const libs = await dumbCacheGitHubResults(timeout, dir, cacheFile);
+	const fetchedLib = await getLibByOwnerAndName(owner, name, libs);
+	const data = {
+		site: site,
+		metadata: {
+			title: `${service.name} - Library: ${owner}/${name}`,
+			description: service.description,
+		},
+		lib: fetchedLib,
+	};
+
+	if (!owner || !name) return reply.status(404).send(`${owner}/${name} not found`);
+	reply.view("../../edge/templates/view.edge", data);
 	return reply;
 });
 
@@ -52,18 +78,18 @@ server.get("/", async (request, reply) => {
 //
 // optimization here is welcome.
 server.get("/:owner/:name", async (request, reply) => {
-	const libs = await dumbCacheGitHubResults(timeout, dir, cacheFile);;
-	// set up our types for the expected parameters
+	// set up our types for the expected parameters and handle issues with input URL
 	const { owner, name } = request.params as { owner: string; name: string };
 	request.log.info(`Received request for owner/name: ${owner}/${name}`);
 	const errFuncInMarkdown = "~~owner/name not found~~"; // leverage Strikethrough() for non-existent packages, lol
 	reply.header("Content-Type", "text/markdown");
 	if (!owner || !name) return reply.status(404).send(errFuncInMarkdown);
-	for (const lib in libs) {
-		if (libs[lib].owner === owner && libs[lib].name === name) {
-			reply.code(200);
-			return reply.send(libs[lib].readme.content);
-		}
+	// do the actual work of this endpoint
+	const libs = await dumbCacheGitHubResults(timeout, dir, cacheFile);;
+	const fetchedLib = await getLibByOwnerAndName(owner, name, libs);
+	if (fetchedLib !== undefined) {
+		reply.code(200);
+		return reply.send(fetchedLib.readme.content);
 	}
 	return reply.status(404).send(errFuncInMarkdown);
 });

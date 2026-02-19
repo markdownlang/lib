@@ -59,7 +59,7 @@
 		}
 	</style>
 	<style>
-		.hero {
+		.header {
 			font-family: "Inconsolata", monospace;
 			font-optical-sizing: auto;
 			font-weight: 400;
@@ -75,15 +75,15 @@
 			margin-bottom: 3rem;
 		}
 
-		.hero h1 {
+		.header h1 {
 			flex-basis: 100%;
 		}
-		.hero p {
+		.header p {
 			flex-basis: 100%;
 		}
 	</style>
 	<style>
-		.liblist {
+		.container {
 		  font-family: "Inconsolata", monospace;
 			font-optical-sizing: auto;
 			font-weight: 400;
@@ -91,18 +91,20 @@
 			font-variation-settings:
 				"wdth" 100;
 			display:flex;
+			flex-wrap: wrap;
 			flex-basis: 100%;
 			max-width: 1000px;
 			margin: 0 auto;
 		}
 
-		.liblist .lib {
+		.lib {
 			display: flex;
 			flex-direction: column;
 			flex-basis: 100%;
+			margin-bottom: 3rem;
 		}
 
-		.liblist .lib a {
+		.lib a {
 			font-color: #000;
 		}
 
@@ -140,6 +142,10 @@
 			font-size: 1rem;
 		}
 
+		.lib-sidebar section {
+			margin-bottom: 1rem;
+		}
+
 		.lib-code pre, .lib-sidebar pre {
 			border: 1px #111 solid;
 			border-radius: 3px;
@@ -164,6 +170,7 @@
 
 		.lib-sidebar h3 {
 			font-size: 1rem;
+			margin-bottom: 1rem;
 		}
 		.lib-sidebar p, .lib-sidebar blockquote {
 			font-size: 1rem;

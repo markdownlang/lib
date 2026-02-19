@@ -1,0 +1,36 @@
+<section id="lib" class="lib">
+	<header class="lib-header">
+		<h2><a href="{{site.protocol}}://{{site.root}}/{{ lib.id }}">{{ lib.id }}</a>/README.md</h3>
+	</header>
+	<section class="lib-body">
+		<section class="lib-sidebar">
+			<section class="lib-description">
+				<h3>### Description</h4>
+				<blockquote>{{ lib.description }}</blockquote>
+			</section>
+			<section calss="lib-usage">
+				<h3>### Usage</h4>
+				<pre>[](https://lib.lang.md/{{lib.id}})</pre>
+			</section>
+			<section class="lib-alternative-access">
+				<h3>### Alternative Access</h4>
+				<p>Pin: <a href="{{site.protocol}}://{{site.root}}/pin/{{ lib.pin}}">./pin/{{ lib.pin}}</a></p>
+				<p>SHA: <a href="{{site.protocol}}://{{site.root}}/sha/{{ lib.readme.sha}}">./sha/{{ lib.readme.sha}}</a></p>
+			</section>
+			<aside>
+				<p><a href="{{ lib.url }}">GitHub</a></p>
+				@if(lib.homepage !== "") 
+					<p><a href="{{ lib.homepage }}">Homepage</a></p>
+				@end
+				<p>Stars: {{ lib.stargazers }}</p>
+				<p>Issues: {{ lib.issues }}</p>
+				<p>License: {{ lib.license }}</p>
+		</aside>
+		</section>
+		<section class="lib-code">
+			<section class="lib-reamde">
+				<pre class="readme">{{ lib.readme.content }}</pre>
+			</section>
+		</section>
+	</section>
+</section>
