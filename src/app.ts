@@ -28,7 +28,7 @@ server.register(fastifyView, {
 const { dir, cacheFile } = await generateTempDirAndCacheFile()
 const timeout = Number(process.env['CACHE_TIMEOUT']) || 1000*60*10; // default to 10 minute timeout for cache
 const site = {
-	root: process.env['SITE_ROOT'] || 'http://localhost:8080',
+	root: process.env['SITE_ROOT'] || '127.0.0.1:8080',
 	protocol: process.env['SITE_PROTOCOL'] || 'http',
 }
 
