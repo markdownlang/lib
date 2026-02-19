@@ -28,7 +28,11 @@
 				@end
 				<p>Stars: {{ lib.stargazers }}</p>
 				<p>Issues: {{ lib.issues }}</p>
+				@if(lib.license)
 				<p>License: {{ lib.license }}</p>
+				@else
+				<p>License: ~~none~~</p>
+				@end
 		</aside>
 		</section>
 		<section class="lib-code">
