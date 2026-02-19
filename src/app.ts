@@ -24,6 +24,7 @@ server.register(fastifyView, {
 	},
 });
 
+// let's set up everything we're going to need to run the app
 const { dir, cacheFile } = await generateTempDirAndCacheFile()
 const timeout = Number(process.env['CACHE_TIMEOUT']) || 1000*60*10; // default to 10 minute timeout for cache
 const site = {
@@ -94,6 +95,9 @@ server.get("/:owner/:name", async (request, reply) => {
 	return reply.status(404).send(errFuncInMarkdown);
 });
 
+// this renders the pin URL, which specifically is the unique ID of
+// a repository in GitHub - this helps allows for pinning on libraries
+// if the origin repo moves around or gets renamed
 server.get("/pin/:pin", async (request, reply) => {
 	const libs = await dumbCacheGitHubResults(timeout, dir, cacheFile);
 	const { pin } = request.params as { pin: string};
@@ -117,6 +121,11 @@ server.get("/pin/:pin", async (request, reply) => {
 	return reply.status(404).send(errFuncInMarkdown);
 });
 
+
+// this serves the library off of the SHA of the README, which is 
+// a pretty decent way to ensure that you're using the exact content
+// you expect as long as you don't think about what happens if there's an
+// update too hard
 server.get("/sha/:sha", async (request, reply) => {
 	const libs = await dumbCacheGitHubResults(timeout, dir, cacheFile);
 	const { sha } = request.params as { sha: string};
