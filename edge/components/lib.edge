@@ -6,7 +6,11 @@
 		<section class="lib-sidebar">
 			<section class="lib-description">
 				<h3>### Description</h4>
-				<blockquote>{{ lib.description }}</blockquote>
+				@if(lib.description)
+					<blockquote>{{ lib.description }}</blockquote>
+				@else
+					<blockquote>~~no description provided~~</blockquote>
+				@end
 			</section>
 			<section calss="lib-usage">
 				<h3>### Usage</h4>
